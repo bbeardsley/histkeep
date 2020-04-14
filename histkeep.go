@@ -2,8 +2,10 @@ package histkeep
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
 )
 
 // HistKeep main struct
@@ -17,15 +19,23 @@ type HistKeep interface {
 type histKeep struct {
 	filename     string
 	numberToKeep int
+	format       regexp.Regexp
 }
 
-// NewHistKeep creates a new HistKeep struct
-func NewHistKeep(filename string, numberToKeep int) HistKeep {
-	return &histKeep{filename, numberToKeep}
+// NewHistKeep creates a new HistKeep struct, pass null for format to match any string
+func NewHistKeep(filename string, numberToKeep int, format *regexp.Regexp) HistKeep {
+	if format == nil {
+		format, _ = regexp.Compile(".*")
+	}
+	return &histKeep{filename, numberToKeep, *format}
 }
 
 func (histkeep *histKeep) AddValue(value string) error {
-	lines, err := readLines(histkeep.filename, value)
+	if !histkeep.format.MatchString(value) {
+		return errors.New("Invalid format for value")
+	}
+
+	lines, err := readLines(histkeep.filename, value, histkeep.format)
 	if err != nil {
 		return err
 	}
@@ -45,7 +55,7 @@ func (histkeep *histKeep) AddValue(value string) error {
 }
 
 func (histkeep *histKeep) RemoveValue(value string) error {
-	lines, err := readLines(histkeep.filename, value)
+	lines, err := readLines(histkeep.filename, value, histkeep.format)
 	if err != nil {
 		return err
 	}
@@ -69,7 +79,7 @@ func (histkeep *histKeep) ClearValues() error {
 }
 
 func (histkeep *histKeep) ListValues() error {
-	lines, err := readLines(histkeep.filename, "")
+	lines, err := readLines(histkeep.filename, "", histkeep.format)
 	if err != nil {
 		return err
 	}
@@ -91,7 +101,7 @@ func (histkeep *histKeep) ListValues() error {
 	return nil
 }
 
-func readLines(path string, ignoreValue string) ([]string, error) {
+func readLines(path string, ignoreValue string, format regexp.Regexp) ([]string, error) {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return make([]string, 0), nil
@@ -107,7 +117,7 @@ func readLines(path string, ignoreValue string) ([]string, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line != ignoreValue && line != "" {
+		if line != ignoreValue && line != "" && format.MatchString(line) {
 			lines = append(lines, line)
 		}
 	}

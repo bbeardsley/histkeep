@@ -12,7 +12,7 @@ import (
 type HistKeep interface {
 	AddValue(value string) error
 	RemoveValue(value string) error
-	ListValues() error
+	GetValues() ([]string, error)
 	ClearValues() error
 }
 
@@ -78,27 +78,18 @@ func (histkeep *histKeep) ClearValues() error {
 	return nil
 }
 
-func (histkeep *histKeep) ListValues() error {
+func (histkeep *histKeep) GetValues() ([]string, error) {
 	lines, err := readLines(histkeep.filename, "", histkeep.format)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lines, err = limitSlice(lines, histkeep.numberToKeep)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for i, line := range lines {
-		if i != len(lines)-1 {
-			fmt.Println(line)
-		} else {
-			fmt.Print(line)
-		}
-
-	}
-
-	return nil
+	return lines, nil
 }
 
 func readLines(path string, ignoreValue string, format regexp.Regexp) ([]string, error) {

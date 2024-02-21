@@ -2,7 +2,6 @@ package histkeep
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -35,7 +34,7 @@ func NewHistKeep(filename string, numberToKeep int, format *regexp.Regexp) HistK
 
 func (histkeep *histKeep) AddValue(value string) error {
 	if !histkeep.format.MatchString(value) {
-		return errors.New("Invalid format for value")
+		return fmt.Errorf("invalid format for value")
 	}
 
 	lines, err := readLines(histkeep.filename, value, histkeep.format)

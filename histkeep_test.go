@@ -97,6 +97,31 @@ func TestWithTwo(t *testing.T) {
 	verifyData(t, hk, "")
 }
 
+func TestGetFilteredValues(t *testing.T) {
+	hk := NewHistKeep(testDataFile, 4, nil)
+
+	defer deleteTestData()
+
+	hk.AddValue("test-1")
+	hk.AddValue("test-2")
+	hk.AddValue("other-A")
+	hk.AddValue("test-3")
+	hk.AddValue("test-4")
+	hk.AddValue("other-B")
+
+	verifyData(t, hk, "other-A\ntest-3\ntest-4\nother-B")
+
+	filtered, err := hk.GetFilteredValues(func(val string) bool { return strings.Contains(val, "other-") })
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual := strings.Join(filtered, "\n")
+	expected := "other-A\nother-B"
+	if actual != expected {
+		t.Fatalf("expected %s but got %s", expected, actual)
+	}
+}
+
 func verifyData(t *testing.T, hk HistKeep, expected string) {
 	actualValues, err := hk.GetValues()
 	if err != nil {

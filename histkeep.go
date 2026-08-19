@@ -174,7 +174,7 @@ func (b byIndex) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
 
 func reverseValues(values []string) []string {
 	stringValues := make([]stringValue, 0)
-	for i := 0; i < len(values); i++ {
+	for i := range values {
 		stringValues = append(stringValues, stringValue{values[i], i})
 	}
 	sort.Sort(sort.Reverse(byIndex(stringValues)))
